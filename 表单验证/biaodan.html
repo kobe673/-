@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>jQuery Ajax</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #F7F7F7;
+        }
+
+        ul {
+            margin: 0;
+            padding: 50px;
+            list-style: none;
+        }
+
+        .register {
+            width: 800px;
+            margin: 50px auto;
+            background-color: #FFF;
+            border: 1px solid #CCC;
+            border-radius: 5px;
+        }
+
+        li {
+            display: flex;
+            margin: 20px 0;
+        }
+
+        label, input {
+            display: block;
+            float: left;
+            height: 46px;
+            font-size: 24px;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        label {
+            width: 200px;
+            line-height: 46px;
+            margin-right: 30px;
+            text-align: right;
+        }
+
+        input {
+            width: 320px;
+            padding: 8px;
+            line-height: 1;
+            outline: none;
+            position: relative;
+        }
+
+        input.code {
+            width: 120px;
+        }
+
+        input.verify {
+            width: 190px;
+            margin-left: 10px;
+        }
+
+        input.disabled {
+            background-color: #CCC !important;
+        }
+
+        input[type=button] {
+            border: none;
+            color: #FFF;
+            background-color: #E64145;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .tips {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 40px;
+            text-align: center;
+        }
+
+        .tips p {
+            min-width: 300px;
+            max-width: 400px;
+            line-height: 40px;
+            margin: 0 auto;
+            color: #FFF;
+            display: none;
+            background-color: #C91623;
+        }
+    </style>
+</head>
+<body>
+<div class="register">
+    <form id="ajaxForm">
+        <ul>
+            <li>
+                <label for="">用户名</label>
+                <input type="text" name="name" class="name">
+            </li>
+            <li>
+                <label for="">请设置密码</label>
+                <input type="password" name="pass" class="pass">
+            </li>
+            <li>
+                <label for="">请确认密码</label>
+                <input type="password" name="repass" class="repass">
+            </li>
+            <li>
+                <label for="">验证手机</label>
+                <input type="text" name="mobile" class="mobile">
+            </li>
+            <li>
+                <label for="">短信验证码</label>
+                <input type="text" name="code" class="code">
+                <input type="button" value="获取验证码" class="verify">
+            </li>
+            <li>
+                <label for=""></label>
+                <input type="button" class="submit" value="立即注册">
+            </li>
+        </ul>
+    </form>
+</div>
+<!-- 提示信息 -->
+<div class="tips">
+    <p>用户名不能为空</p>
+</div>
+<!-- 引入jQuery -->
+<script src="./js/jquery.min.js"></script>
+<script>
+    $('.submit').on('click',function(){
+        //阻止重复发送请求
+        if ( $(this).hasClass('disabled') ) {
+            return false;
+        }
+
+
+//       serialize()方法是用来序列化表单的(拥有name属性的input才会被获取)
+       var formData = $('#ajaxForm').serialize();
+        //console.log(formData);//name=&pass=&repass=&mobile=&code=
+       //保存按钮对象
+       var _this = $(this);
+
+
+        $.ajax({
+           //发送数据的类型,post常用于表单,因为可以加密
+           type:'post',
+           //请求地址
+           url:'./go.php',
+           //请求的数据
+           data:formData,
+           //发送前会执行这个方法
+           beforeSend: function () {
+               //如果用户名为空
+               if ( $('.name').val() == '' ) {
+                   tips('用户名不能为空');
+                   return false;
+               }
+               else if ( $('.pass').val() =='' ) {
+                   tips('密码不能为空');
+                   return false;
+               }
+               else if ( $('.repass').val() != $('.pass').val() ) {
+                   tips('密码确认错误');
+                   return false;
+               }
+
+               _this.val('正在提交...').addClass('disabled');
+           },
+           //发送成功后进行数据处理
+           success: function (info) {
+                console.log(info);
+               //通过后台返回数据进行相应操作
+                if (info.code == 1) {
+                    tips(info.msg);
+                    return;
+                }
+                else if (info.code == 2) {
+                    tips(info.msg);
+                    return;
+                }
+                else {
+                    location.href = info.result;
+                }
+           },
+           //整个请求完成后执行的函数
+           complete: function () {
+               _this.val('立即注册').removeClass('disabled');
+           }
+
+        });
+
+
+    });
+
+    //对判断结果进行封装
+    function tips (txt) {
+        $('.tips p')
+                .text(txt).stop()
+                .fadeIn(500)
+                .delay(1500)
+                .fadeOut(500);
+    }
+
+
+
+    //实际开发中还会有很多的判断,更加严谨,不过思路就是这种思路
+</script>
+</body>
+</html>
